@@ -56,33 +56,40 @@ namespace NotesApp.MVVM.ViewModel.Helpers
         {
             using (HttpClient client = new HttpClient())
             {
-                var body = new
+                try
                 {
-                    email = user.Username,
-                    password = user.Password,
-                    returnSecureToken = true
-                };
+                    var body = new
+                    {
+                        email = user.Username,
+                        password = user.Password,
+                        returnSecureToken = true
+                    };
 
-                var bodyJson = JsonSerializer.Serialize(body);
-                var data = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+                    var bodyJson = JsonSerializer.Serialize(body);
+                    var data = new StringContent(bodyJson, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync($"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}", data);
+                    var response = await client.PostAsync($"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={API_KEY}", data);
 
-                if (response.IsSuccessStatusCode)
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string resultJson = await response.Content.ReadAsStringAsync();
+                        var result = JsonSerializer.Deserialize<FirebaseResult>(resultJson);
+
+                        App.UserId = result.localId;
+
+                        return true;
+                    }
+                    else
+                    {
+                        string errorJson = await response.Content.ReadAsStringAsync();
+                        var error = JsonSerializer.Deserialize<Error>(errorJson);
+                        MessageBox.Show(error.error.message);
+
+                        return false;
+                    }
+                }catch(Exception ex)
                 {
-                    string resultJson = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<FirebaseResult>(resultJson);
-
-                    App.UserId = result.localId;
-
-                    return true;
-                }
-                else
-                {
-                    string errorJson = await response.Content.ReadAsStringAsync();
-                    var error = JsonSerializer.Deserialize<Error>(errorJson);
-                    MessageBox.Show(error.error.message);
-
+                    MessageBox.Show(ex.Message, "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return false;
                 }
             }

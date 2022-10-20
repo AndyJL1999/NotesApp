@@ -15,6 +15,8 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Net;
 using System.Net.Http;
+using System.Windows.Media.Animation;
+using System.IO.Pipes;
 
 namespace NotesApp.MVVM.View
 {
@@ -23,6 +25,9 @@ namespace NotesApp.MVVM.View
     /// </summary>
     public partial class NotesWindow : Window
     {
+        public static string bucket = "wpf-notes-app-c3ec4.appspot.com";
+
+        int animPlayed = 0;
         NotesVM viewModel;
         public NotesWindow()
         {
@@ -30,6 +35,7 @@ namespace NotesApp.MVVM.View
 
             viewModel = Resources["vm"] as NotesVM;
             viewModel.SelectedNoteChanged += viewModel_SelectedNoteChanged;
+            viewModel.SelectedNotebookChanged += ViewModel_SelectedNotebookChanged;
 
             var fontFamilies = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
             fontFamilyComboBox.ItemsSource = fontFamilies;
@@ -54,6 +60,19 @@ namespace NotesApp.MVVM.View
             }
         }
 
+        private void ViewModel_SelectedNotebookChanged(object? sender, EventArgs e)
+        {
+            if (viewModel.SelectedNotebook != null)
+            {
+                Storyboard sb = this.FindResource("NotePanelSlide") as Storyboard;
+                if(animPlayed == 0)
+                {
+                    sb.Begin();
+                    animPlayed++;
+                }  
+            }
+        }
+
         private async void viewModel_SelectedNoteChanged(object? sender, EventArgs e)
         {
             contentRichTextBox.Document.Blocks.Clear();
@@ -61,22 +80,16 @@ namespace NotesApp.MVVM.View
             {
                 if (!string.IsNullOrEmpty(viewModel.SelectedNote.FileLocation))
                 {
-                    string bucket = "wpf-notes-app-c3ec4.appspot.com";
                     string downloadPath = await new FirebaseStorage(bucket).Child(viewModel.SelectedNote.Id + ".rtf").GetDownloadUrlAsync();
-                    
-                    using (FileStream fileStream = new FileStream(viewModel.SelectedNote.Id + ".rtf", FileMode.Open, FileAccess.ReadWrite))
-                    {
-                        using (HttpResponseMessage response = await new HttpClient().GetAsync(downloadPath))
-                        {
-                            var text = await response.Content.ReadAsByteArrayAsync();
-                            fileStream.Write(text);
-                        }
-                       
-                        var contents = new TextRange(contentRichTextBox.Document.ContentStart, contentRichTextBox.Document.ContentEnd);
-                        contents.Load(fileStream, DataFormats.Rtf);
 
-                        fileStream.Close();
-                    }    
+                    using (HttpResponseMessage response = await new HttpClient().GetAsync(downloadPath))
+                    {
+                        using (Stream fileStream = await response.Content.ReadAsStreamAsync())
+                        {
+                            var contents = new TextRange(contentRichTextBox.Document.ContentStart, contentRichTextBox.Document.ContentEnd);
+                            contents.Load(fileStream, DataFormats.Rtf);
+                        }
+                    }  
                 }
             }
         }
@@ -198,8 +211,6 @@ namespace NotesApp.MVVM.View
 
         private async Task<string> UpdateFile(string filePath, string fileName)
         {
-            string bucket = "wpf-notes-app-c3ec4.appspot.com";
-
             using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
             {
                 var upload = await new FirebaseStorage(bucket).Child(fileName).PutAsync(fileStream);

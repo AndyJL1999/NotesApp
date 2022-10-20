@@ -7,15 +7,15 @@
         xmlns:local="clr-namespace:NotesApp.MVVM.View"
         xmlns:vm="clr-namespace:NotesApp.MVVM.ViewModel"
         mc:Ignorable="d"
-        Title="LoginWindow" Height="300" Width="300">
+        Title="Login" Height="300" Width="300">
 
     <Window.Resources>
         <vm:LoginVM x:Key="vm"/>
     </Window.Resources>
-    
+
     <Grid DataContext="{StaticResource vm}">
-        <StackPanel Visibility="{Binding LoginVisible}" Margin="10">
-            
+        <StackPanel Visibility="{Binding LoginVisible}" Margin="10" Grid.Row="1">
+
             <TextBlock Text="Email:"/>
             <TextBox Text="{Binding Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <TextBlock Text="Password:"/>
@@ -24,7 +24,8 @@
             <Button Content="Login" Command="{Binding LoginCommand}" 
                     CommandParameter="{Binding User}" Margin="0,5"/>
 
-            <TextBlock Text="Register" Foreground="DodgerBlue" TextDecorations="Underline">
+            <TextBlock Text="Register" Foreground="DodgerBlue" 
+                       TextDecorations="Underline" HorizontalAlignment="Center">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseLeftButtonDown">
                         <i:InvokeCommandAction Command="{Binding ShowRegisterCommand}"/>
@@ -48,7 +49,8 @@
             <Button Content="Register" Command="{Binding RegisterCommand}" 
                     CommandParameter="{Binding User}" Margin="0,5"/>
 
-            <TextBlock Text="Login" Foreground="DodgerBlue" TextDecorations="Underline">
+            <TextBlock Text="Login" Foreground="DodgerBlue" 
+                       TextDecorations="Underline" HorizontalAlignment="Center">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseLeftButtonDown">
                         <i:InvokeCommandAction Command="{Binding ShowRegisterCommand}"/>

@@ -20,6 +20,7 @@ namespace NotesApp.MVVM.ViewModel
 
 		public event PropertyChangedEventHandler? PropertyChanged;
 		public event EventHandler? SelectedNoteChanged;
+		public event EventHandler? SelectedNotebookChanged;
 
         //Properties
         public Notebook SelectedNotebook
@@ -29,6 +30,7 @@ namespace NotesApp.MVVM.ViewModel
 			{ 
 				_selectedNotebook = value;
 				OnPropertyChanged(nameof(SelectedNotebook));
+				SelectedNotebookChanged?.Invoke(this, new EventArgs());
 				//Get notes
 				GetNotes();
 			}
@@ -59,6 +61,7 @@ namespace NotesApp.MVVM.ViewModel
 		public EditCommand EditCommand { get; set; }
 		public EndEditCommand EndEditCommand { get; set; }
 		public NewNoteCommand NewNoteCommand { get; set; }
+		public DeleteCommand DeleteCommand { get; set; }
 
 		//Constructor
 		public NotesVM()
@@ -68,13 +71,12 @@ namespace NotesApp.MVVM.ViewModel
 			NewNoteCommand = new NewNoteCommand(this);
 			EditCommand = new EditCommand(this);
 			EndEditCommand = new EndEditCommand(this);
+			DeleteCommand = new DeleteCommand(this);
 
 			Notebooks = new ObservableCollection<Notebook>();
 			Notes = new ObservableCollection<Note>();
 
 			IsVisible = Visibility.Collapsed;
-
-			GetNotebooks();
 		}
 
 		//Methods
@@ -106,7 +108,19 @@ namespace NotesApp.MVVM.ViewModel
 			GetNotes();
 		}
 
-		public async void GetNotebooks()
+		public async void DeleteNote()
+		{
+			await DatabaseHelper.Delete(_selectedNote);
+			GetNotes();
+		}
+
+        public async void DeleteNotebook()
+        {
+            await DatabaseHelper.Delete(_selectedNotebook);
+            GetNotebooks();
+        }
+
+        public async void GetNotebooks()
 		{
 			string appUserId = App.UserId;
 
