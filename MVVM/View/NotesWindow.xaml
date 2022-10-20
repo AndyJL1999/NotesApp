@@ -32,15 +32,15 @@
             </MenuItem>
         </Menu>
 
-        <StatusBar DockPanel.Dock="Bottom">
+        <StatusBar DockPanel.Dock="Bottom" Background="#272537">
             <StatusBarItem>
-                <TextBlock x:Name="statusTextBlock"/>
+                <TextBlock x:Name="statusTextBlock" Foreground="White"/>
             </StatusBarItem>
         </StatusBar>
 
         <ListView DockPanel.Dock="Left" Width="140" ItemsSource="{Binding Notebooks}" 
                   SelectedValue="{Binding SelectedNotebook, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                  Background="MidnightBlue">
+                  Background="#272537">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
