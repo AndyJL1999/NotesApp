@@ -17,6 +17,8 @@ using System.Net;
 using System.Net.Http;
 using System.Windows.Media.Animation;
 using System.IO.Pipes;
+using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace NotesApp.MVVM.View
 {
@@ -73,6 +75,7 @@ namespace NotesApp.MVVM.View
             }
         }
 
+        //Executes when a note is selected
         private async void viewModel_SelectedNoteChanged(object? sender, EventArgs e)
         {
             contentRichTextBox.Document.Blocks.Clear();
@@ -80,16 +83,18 @@ namespace NotesApp.MVVM.View
             {
                 if (!string.IsNullOrEmpty(viewModel.SelectedNote.FileLocation))
                 {
+                    //Get note from cloud storage | WARNINING: The call to Firebase storage causes delay
                     string downloadPath = await new FirebaseStorage(bucket).Child(viewModel.SelectedNote.Id + ".rtf").GetDownloadUrlAsync();
 
-                    using (HttpResponseMessage response = await new HttpClient().GetAsync(downloadPath))
+                    //Update the local storage note with its corresponding cloud storage note
+                    using (HttpResponseMessage response = await DatabaseHelper.httpClient.GetAsync(downloadPath))
                     {
                         using (Stream fileStream = await response.Content.ReadAsStreamAsync())
                         {
                             var contents = new TextRange(contentRichTextBox.Document.ContentStart, contentRichTextBox.Document.ContentEnd);
                             contents.Load(fileStream, DataFormats.Rtf);
                         }
-                    }  
+                    }
                 }
             }
         }
@@ -106,6 +111,7 @@ namespace NotesApp.MVVM.View
             statusTextBlock.Text = $"Document length: {amountOfCharacters} characters";
         }
 
+        //Bolden or unbolden selected text when clicked
         private void boldButton_Click(object sender, RoutedEventArgs e)
         {
             bool isChecked = (sender as ToggleButton).IsChecked ?? false;
@@ -116,6 +122,7 @@ namespace NotesApp.MVVM.View
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontWeightProperty, FontWeights.Normal);
         }
 
+        //Italicize or remove italicized selected text when clicked
         private void italicButton_Click(object sender, RoutedEventArgs e)
         {
             bool isButtonEnabled = (sender as ToggleButton).IsChecked ?? false;
@@ -126,6 +133,7 @@ namespace NotesApp.MVVM.View
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontStyleProperty, FontStyles.Normal);
         }
 
+        //Underline or remove underline selected text when clicked
         private void underlineButton_Click(object sender, RoutedEventArgs e)
         {
             bool isButtonEnabled = (sender as ToggleButton).IsChecked ?? false;

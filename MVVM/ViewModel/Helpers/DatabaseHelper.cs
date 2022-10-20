@@ -19,6 +19,8 @@ namespace NotesApp.MVVM.ViewModel.Helpers
 {
     public class DatabaseHelper
     {
+        public static readonly HttpClient httpClient = new HttpClient();
+
         private static string dbFile = Path.Combine(Environment.CurrentDirectory, "Notes_DB.db3");
         private static string dbPath = "https://wpf-notes-app-c3ec4-default-rtdb.firebaseio.com/";
 
@@ -27,15 +29,14 @@ namespace NotesApp.MVVM.ViewModel.Helpers
             string jsonBody = JsonSerializer.Serialize(item);
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-            using(HttpClient client = new HttpClient())
-            {
-                var result = await client.PostAsync($"{dbPath}{item.GetType().Name.ToLower()}.json", content);
+            
+            var result = await httpClient.PostAsync($"{dbPath}{item.GetType().Name.ToLower()}.json", content);
 
-                if (result.IsSuccessStatusCode)
-                    return true;
-                else
-                    return false;
-            }
+            if (result.IsSuccessStatusCode)
+                return true;
+            else
+                return false;
+            
         }
 
         public static async Task<bool> Update<T>(T item) where T : IHasId
@@ -43,15 +44,13 @@ namespace NotesApp.MVVM.ViewModel.Helpers
             string jsonBody = JsonSerializer.Serialize(item);
             var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-            using (HttpClient client = new HttpClient())
-            {
-                var result = await client.PatchAsync($"{dbPath}{item.GetType().Name.ToLower()}/{item.Id}.json", content);
-
-                if (result.IsSuccessStatusCode)
-                    return true;
-                else
-                    return false;
-            }
+            var result = await httpClient.PatchAsync($"{dbPath}{item.GetType().Name.ToLower()}/{item.Id}.json", content);
+            
+            if (result.IsSuccessStatusCode)
+                return true;
+            else
+                return false;
+            
         }
 
         public static async Task<bool> Delete<T>(T item) where T : IHasId
@@ -61,7 +60,7 @@ namespace NotesApp.MVVM.ViewModel.Helpers
                 if (item.GetType() == typeof(Note))
                     await new FirebaseStorage(NotesWindow.bucket).Child((item as Note).Id + ".rtf").DeleteAsync();
 
-                var result = await client.DeleteAsync($"{dbPath}{item.GetType().Name.ToLower()}/{item.Id}.json");
+                var result = await httpClient.DeleteAsync($"{dbPath}{item.GetType().Name.ToLower()}/{item.Id}.json");
 
                 if (result.IsSuccessStatusCode)
                     return true;
@@ -72,37 +71,35 @@ namespace NotesApp.MVVM.ViewModel.Helpers
 
         public static async Task<List<T>> Read<T>() where T : IHasId
         {
-            using (HttpClient client = new HttpClient())
+            try
             {
-                try
+                var result = await httpClient.GetAsync($"{dbPath}{typeof(T).Name.ToLower()}.json");
+                var jsonResult = await result.Content.ReadAsStringAsync();
+
+                if (jsonResult != "null" && result.IsSuccessStatusCode)
                 {
-                    var result = await client.GetAsync($"{dbPath}{typeof(T).Name.ToLower()}.json");
-                    var jsonResult = await result.Content.ReadAsStringAsync();
+                    var objects = JsonSerializer.Deserialize<Dictionary<string, T>>(jsonResult);
 
-                    if (jsonResult != "null" && result.IsSuccessStatusCode)
+                    List<T> list = new List<T>();
+                    foreach (var o in objects)
                     {
-                        var objects = JsonSerializer.Deserialize<Dictionary<string, T>>(jsonResult);
-
-                        List<T> list = new List<T>();
-                        foreach (var o in objects)
-                        {
-                            o.Value.Id = o.Key;
-                            list.Add(o.Value);
-                        }
-
-                        return list;
+                        o.Value.Id = o.Key;
+                        list.Add(o.Value);
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return list;
                 }
-                catch(Exception ex)
+                else
                 {
-                    MessageBox.Show(ex.Message, "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return null;
                 }
             }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Connection Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return null;
+            }
+            
         }
     }
 }
