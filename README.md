@@ -1,5 +1,6 @@
-# NotesApp
-<h1>Keeping Notes</h1>
+<h1>NotesApp</h1>
+
+<h2>Keeping Notes</h2>
 <p>
 To continue improving at WPF, I'm now moving on to more robust applications. This note app is based off of evernote.
 It has the bare-bones functionality that is expected of a note-taking app. You are capable of creating notebooks and adding notes to those notebooks.
@@ -10,7 +11,7 @@ To save your note you press the save button.
 
 <img src="https://user-images.githubusercontent.com/88408654/197054156-f0074eb5-b2e3-4a5c-87d3-36b8dbe1c57f.PNG"/>
 
-<h1>MVVM</h1>
+<h2>MVVM</h2>
 <p>
 I've recently started implementing MVVM and this app is one of those implementations. There are only 2 views with corresponding view models; the login and notes view.
 </p>
@@ -25,14 +26,14 @@ of code in it's code-behind, it containing much of the logic that is used for na
 I plan on cleaning it up at a later date.
 </p>
 
-<h1>Google Firebase Services</h1>
+<h2>Google Firebase Services</h2>
 <p>
 My data is currently being stored on the cloud using Google Firebase Services. My authentication, database, and storage are all provided by Firebase. While the
 authentication and database are working well, calls to the storage seem to be a bit slow. This causes a delay when retrieving and displaying notes. The delay can last
 from half a second to a full second, so its not too intrusive but I'd prefer it dodn't exist.
 </p>
 
-<h1>BONUS</h1>
+<h2>BONUS</h2>
 <p>
 A little bonus to add spice to my app would be a slide animation added to the notes panel. Whenever a notebook is first selected the notes panel will slide into view.
 This only ever happens in the beginning. I decided it would be best not to make it a constant attraction.
