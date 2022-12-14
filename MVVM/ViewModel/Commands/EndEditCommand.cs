@@ -26,8 +26,10 @@ namespace NotesApp.MVVM.ViewModel.Commands
         public void Execute(object? parameter)
         {
             Notebook notebook = parameter as Notebook;
-            if(notebook != null)
+            if (notebook != null)
+            {
                 VM.StopEditing(notebook);
+            }
         }
     }
 }

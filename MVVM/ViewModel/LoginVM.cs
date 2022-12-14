@@ -30,6 +30,19 @@ namespace NotesApp.MVVM.ViewModel
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler Authenticated;
 
+        //Constructor
+        public LoginVM()
+        {
+            LoginVisible = Visibility.Visible;
+            RegisterVisible = Visibility.Collapsed;
+
+            RegisterCommand = new RegisterCommand(this);
+            LoginCommand = new LoginCommand(this);
+            ShowRegisterCommand = new ShowRegisterCommand(this);
+
+            User = new User();
+        }
+
         //Properties
         public User User
         {
@@ -155,18 +168,6 @@ namespace NotesApp.MVVM.ViewModel
         public LoginCommand LoginCommand { get; set; }
         public ShowRegisterCommand ShowRegisterCommand { get; set; }
 
-        //Constructor
-        public LoginVM()
-        {
-            LoginVisible = Visibility.Visible;
-            RegisterVisible = Visibility.Collapsed;
-
-            RegisterCommand = new RegisterCommand(this);
-            LoginCommand = new LoginCommand(this);
-            ShowRegisterCommand = new ShowRegisterCommand(this);
-
-            User = new User();
-        }
 
         //Methods
         public void SwitchViews()

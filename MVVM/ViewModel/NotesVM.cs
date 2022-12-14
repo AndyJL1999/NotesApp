@@ -22,6 +22,22 @@ namespace NotesApp.MVVM.ViewModel
 		public event EventHandler? SelectedNoteChanged;
 		public event EventHandler? SelectedNotebookChanged;
 
+        //Constructor
+        public NotesVM()
+        {
+            //Initialize commands
+            NewNotebookCommand = new NewNotebookCommand(this);
+            NewNoteCommand = new NewNoteCommand(this);
+            EditCommand = new EditCommand(this);
+            EndEditCommand = new EndEditCommand(this);
+            DeleteCommand = new DeleteCommand(this);
+
+            Notebooks = new ObservableCollection<Notebook>();
+            Notes = new ObservableCollection<Note>();
+
+            IsVisible = Visibility.Collapsed;
+        }
+
         //Properties
         public Notebook SelectedNotebook
 		{
@@ -62,22 +78,6 @@ namespace NotesApp.MVVM.ViewModel
 		public EndEditCommand EndEditCommand { get; set; }
 		public NewNoteCommand NewNoteCommand { get; set; }
 		public DeleteCommand DeleteCommand { get; set; }
-
-		//Constructor
-		public NotesVM()
-		{
-			//Initialize commands
-			NewNotebookCommand = new NewNotebookCommand(this);
-			NewNoteCommand = new NewNoteCommand(this);
-			EditCommand = new EditCommand(this);
-			EndEditCommand = new EndEditCommand(this);
-			DeleteCommand = new DeleteCommand(this);
-
-			Notebooks = new ObservableCollection<Notebook>();
-			Notes = new ObservableCollection<Note>();
-
-			IsVisible = Visibility.Collapsed;
-		}
 
 		//Methods
         public async void CreateNotebook()

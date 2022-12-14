@@ -91,7 +91,7 @@ namespace NotesApp.MVVM.ViewModel.Helpers
                 }
                 else
                 {
-                    return null;
+                    throw new Exception(result.ReasonPhrase);
                 }
             }
             catch(Exception ex)

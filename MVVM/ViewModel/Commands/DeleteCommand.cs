@@ -27,10 +27,14 @@ namespace NotesApp.MVVM.ViewModel.Commands
         {
 
             if (parameter.GetType() == typeof(Note))
+            {
                 VM.DeleteNote();
+            }
 
             if (parameter.GetType() == typeof(Notebook))
+            {
                 VM.DeleteNotebook();
+            }
         }
     }
 }

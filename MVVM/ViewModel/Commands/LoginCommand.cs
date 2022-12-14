@@ -28,11 +28,17 @@ namespace NotesApp.MVVM.ViewModel.Commands
             User user = parameter as User;
 
             if (user == null)
+            {
                 return false;
+            }
             if (string.IsNullOrEmpty(user.Username))
+            {
                 return false;
+            }
             if (string.IsNullOrEmpty(user.Password))
+            {
                 return false;
+            }
 
             return true;
         }
