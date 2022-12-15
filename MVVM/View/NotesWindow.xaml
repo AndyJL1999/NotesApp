@@ -115,11 +115,14 @@
 
         <Grid>
             <StackPanel>
-                <TextBox Margin="5,0,5,5" Text="{Binding Path=SelectedNote.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBox x:Name="noteTitleTextBox" Margin="5,0,5,5" 
+                         Text="{Binding Path=SelectedNote.Title, Mode=TwoWay, 
+                                UpdateSourceTrigger=PropertyChanged}"
+                         IsEnabled="False"/>
                 <RichTextBox x:Name="contentRichTextBox"
                          TextChanged="contentRichTextBox_TextChanged"
                          SelectionChanged="contentRichTextBox_SelectionChanged"
-                         BorderThickness="0"/>
+                         BorderThickness="0" IsEnabled="False"/>
             </StackPanel>
         </Grid>
     </DockPanel>
