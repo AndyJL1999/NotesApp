@@ -7,6 +7,7 @@ using System.Security.RightsManagement;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using NotesApp.MVVM.Model;
 using NotesApp.MVVM.ViewModel.Commands;
 using NotesApp.MVVM.ViewModel.Helpers;
@@ -15,7 +16,7 @@ namespace NotesApp.MVVM.ViewModel
 {
     public class LoginVM : INotifyPropertyChanged
     {
-        //Fields
+        #region ----------Fields----------
         private bool _isShowingRegister = false;
         private User _user;
         private string _userName;
@@ -25,10 +26,15 @@ namespace NotesApp.MVVM.ViewModel
         private string _confirmPassword;
         private Visibility _loginVisible;
         private Visibility _registerVisible;
+        private ICommand _registerCommand;
+        private ICommand _loginCommand;
+        private ICommand _showRegisterCommand;
+        #endregion
 
-        //Events
+        #region ----------Events----------
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler Authenticated;
+        #endregion
 
         //Constructor
         public LoginVM()
@@ -36,14 +42,10 @@ namespace NotesApp.MVVM.ViewModel
             LoginVisible = Visibility.Visible;
             RegisterVisible = Visibility.Collapsed;
 
-            RegisterCommand = new RegisterCommand(this);
-            LoginCommand = new LoginCommand(this);
-            ShowRegisterCommand = new ShowRegisterCommand(this);
-
             User = new User();
         }
 
-        //Properties
+        #region ----------Properties----------
         public User User
         {
             get { return _user; }
@@ -164,12 +166,45 @@ namespace NotesApp.MVVM.ViewModel
             }
         }
 
-        public RegisterCommand RegisterCommand { get; set; }
-        public LoginCommand LoginCommand { get; set; }
-        public ShowRegisterCommand ShowRegisterCommand { get; set; }
+        public ICommand RegisterCommand 
+        {
+            get
+            {
+                if(_registerCommand is null)
+                {
+                    _registerCommand = new RelayCommand(p => Register(), p => CheckFullUser(p));
+                }
 
+                return _registerCommand;
+            }
+        }
+        public ICommand LoginCommand
+        {
+            get
+            {
+                if (_loginCommand is null)
+                {
+                    _loginCommand = new RelayCommand(p => Login(), p => CheckUser(p));
+                }
 
-        //Methods
+                return _loginCommand;
+            }
+        }
+        public ICommand ShowRegisterCommand
+        {
+            get
+            {
+                if (_showRegisterCommand is null)
+                {
+                    _showRegisterCommand = new RelayCommand(p => SwitchViews(), p => true);
+                }
+
+                return _showRegisterCommand;
+            }
+        }
+        #endregion
+
+        #region ----------Methods----------
         public void SwitchViews()
         {
             _isShowingRegister = !_isShowingRegister;
@@ -207,9 +242,58 @@ namespace NotesApp.MVVM.ViewModel
 
         }
 
+        private bool CheckFullUser(object parameter)
+        {
+            User user = parameter as User;
+
+            if (user == null)
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(user.Username))
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(user.ConfirmPassword))
+            {
+                return false;
+            }
+            if (user.Password != user.ConfirmPassword)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckUser(object parameter)
+        {
+            User user = parameter as User;
+
+            if (user == null)
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(user.Username))
+            {
+                return false;
+            }
+            if (string.IsNullOrEmpty(user.Password))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+        #endregion
     }
 }

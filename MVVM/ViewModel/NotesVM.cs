@@ -1,44 +1,59 @@
-﻿using NotesApp.MVVM.Model;
+﻿using Firebase.Storage;
+using NotesApp.MVVM.Model;
 using NotesApp.MVVM.ViewModel.Commands;
 using NotesApp.MVVM.ViewModel.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace NotesApp.MVVM.ViewModel
 {
     public class NotesVM : INotifyPropertyChanged
     {
-		private Notebook _selectedNotebook;
+        #region ----------Fields----------
+        private Notebook _selectedNotebook;
         private Visibility _isVisible;
 		private Note _selectedNote;
+        private FlowDocument _noteDocument;
+        private bool _textEditAllowed;
+        private ICommand _newNotebookCommand;
+        private ICommand _editCommand;
+        private ICommand _endEditCommand;
+        private ICommand _newNoteCommand;
+        private ICommand _deleteCommand;
+        private ICommand _saveCommand;
+        #endregion
 
-		public event PropertyChangedEventHandler? PropertyChanged;
+        #region ----------Events----------
+        public event PropertyChangedEventHandler? PropertyChanged;
 		public event EventHandler? SelectedNoteChanged;
 		public event EventHandler? SelectedNotebookChanged;
+        #endregion
 
         //Constructor
         public NotesVM()
         {
-            //Initialize commands
-            NewNotebookCommand = new NewNotebookCommand(this);
-            NewNoteCommand = new NewNoteCommand(this);
-            EditCommand = new EditCommand(this);
-            EndEditCommand = new EndEditCommand(this);
-            DeleteCommand = new DeleteCommand(this);
-
             Notebooks = new ObservableCollection<Notebook>();
             Notes = new ObservableCollection<Note>();
 
+            NoteDocument = new FlowDocument();
+            TextEditAllowed = false;
+
             IsVisible = Visibility.Collapsed;
+
+            SelectedNoteChanged += NotesVM_SelectedNoteChanged;
         }
 
-        //Properties
+        #region ----------Properties----------
         public Notebook SelectedNotebook
 		{
 			get { return _selectedNotebook; }
@@ -71,15 +86,102 @@ namespace NotesApp.MVVM.ViewModel
 			}
 		}
 
-		public ObservableCollection<Notebook> Notebooks { get; set; }
-        public ObservableCollection<Note> Notes { get; set; }
-		public NewNotebookCommand NewNotebookCommand { get; set; }
-		public EditCommand EditCommand { get; set; }
-		public EndEditCommand EndEditCommand { get; set; }
-		public NewNoteCommand NewNoteCommand { get; set; }
-		public DeleteCommand DeleteCommand { get; set; }
+        public FlowDocument NoteDocument 
+        { 
+            get { return _noteDocument; }
+            set
+            {
+                _noteDocument = value;
+                OnPropertyChanged(nameof(NoteDocument));
+            } 
+        }
 
-		//Methods
+        public bool TextEditAllowed 
+        { 
+            get { return _textEditAllowed; }
+            set
+            {
+                _textEditAllowed = value;
+                OnPropertyChanged(nameof(TextEditAllowed));
+            }
+        }
+        public ICommand NewNotebookCommand 
+        {
+            get
+            {
+                if (_newNotebookCommand is null)
+                {
+                    _newNotebookCommand = new RelayCommand(p => CreateNotebook(), p => true);
+                }
+
+                return _newNotebookCommand;
+            } 
+        }
+        public ICommand EditCommand
+        {
+            get
+            {
+                if (_editCommand is null)
+                {
+                    _editCommand = new RelayCommand(p => StartEditing(), p => true);
+                }
+
+                return _editCommand;
+            }
+        }
+        public ICommand EndEditCommand
+        {
+            get
+            {
+                if (_endEditCommand is null)
+                {
+                    _endEditCommand = new RelayCommand(p => StopEditing((Notebook)p), p => p != null);
+                }
+
+                return _endEditCommand;
+            }
+        }
+        public ICommand NewNoteCommand
+        {
+            get
+            {
+                if (_newNoteCommand is null)
+                {
+                    _newNoteCommand = new RelayCommand(p => CreateNote(SelectedNotebook.Id), p => p != null);
+                }
+
+                return _newNoteCommand;
+            }
+        }
+        public ICommand DeleteCommand
+        {
+            get
+            {
+                if (_deleteCommand is null)
+                {
+                    _deleteCommand = new RelayCommand(p => Delete(p), p => true);
+                }
+
+                return _deleteCommand;
+            }
+        }
+        public ICommand SaveCommand
+        {
+            get
+            {
+                if (_saveCommand is null)
+                {
+                    _saveCommand = new RelayCommand(p => SaveChanges(), p => true);
+                }
+
+                return _saveCommand;
+            }
+        }
+        public ObservableCollection<Notebook> Notebooks { get; set; }
+        public ObservableCollection<Note> Notes { get; set; }
+        #endregion
+
+        #region ----------Methods----------
         public async void CreateNotebook()
         {
             Notebook newNotebook = new Notebook
@@ -108,16 +210,17 @@ namespace NotesApp.MVVM.ViewModel
 			GetNotes();
 		}
 
-		public async void DeleteNote()
-		{
-			await DatabaseHelper.Delete(_selectedNote);
-			GetNotes();
-		}
-
-        public async void DeleteNotebook()
+        public void Delete(object parameter)
         {
-            await DatabaseHelper.Delete(_selectedNotebook);
-            GetNotebooks();
+            if (parameter.GetType() == typeof(Note))
+            {
+                DeleteNote();
+            }
+
+            if (parameter.GetType() == typeof(Notebook))
+            {
+                DeleteNotebook();
+            }
         }
 
         public async void GetNotebooks()
@@ -169,9 +272,68 @@ namespace NotesApp.MVVM.ViewModel
 			GetNotebooks();
         }
 
+        public async void SaveChanges()
+        {
+            string fileName = $"{SelectedNote.Id}.rtf";
+            string rtf_File = Path.Combine(Environment.CurrentDirectory, fileName);
+
+            using (FileStream fileStream = new FileStream(rtf_File, FileMode.Create))
+            {
+                var contents = new TextRange(NoteDocument.ContentStart, NoteDocument.ContentEnd);
+
+                contents.Save(fileStream, DataFormats.Rtf);
+            }
+
+            SelectedNote.FileLocation = await DatabaseHelper.UpdateFile(rtf_File, fileName);
+            await DatabaseHelper.Update(SelectedNote);
+        }
+
+        private async void DeleteNote()
+        {
+            await DatabaseHelper.Delete(_selectedNote);
+            GetNotes();
+        }
+
+        private async void DeleteNotebook()
+        {
+            await DatabaseHelper.Delete(_selectedNotebook);
+            GetNotebooks();
+        }
+
         private void OnPropertyChanged(string propertyName)
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
+
+        //Executes when a note is selected
+        private async void NotesVM_SelectedNoteChanged(object? sender, EventArgs e)
+        {
+            NoteDocument.Blocks.Clear();
+
+            if(SelectedNote is null)
+            {
+                TextEditAllowed = false;
+                return;
+            }
+
+            TextEditAllowed = true;
+
+            if (!string.IsNullOrEmpty(SelectedNote.FileLocation))
+            {
+                //Get note from cloud storage | WARNINING: The call to Firebase storage causes delay
+                string downloadPath = await new FirebaseStorage(DatabaseHelper.bucket).Child(SelectedNote.Id + ".rtf").GetDownloadUrlAsync();
+
+                //Update the local storage note with its corresponding cloud storage note
+                using (HttpResponseMessage response = await DatabaseHelper.httpClient.GetAsync(downloadPath))
+                {
+                    using (Stream fileStream = await response.Content.ReadAsStreamAsync())
+                    {
+                        var contents = new TextRange(NoteDocument.ContentStart, NoteDocument.ContentEnd);
+                        contents.Load(fileStream, DataFormats.Rtf);
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }
