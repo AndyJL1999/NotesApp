@@ -35,7 +35,7 @@ namespace NotesApp.MVVM.View
             InitializeComponent();
 
             viewModel = Resources["vm"] as NotesVM;
-            viewModel.SelectedNoteChanged += viewModel_SelectedNoteChanged;
+
             viewModel.SelectedNotebookChanged += ViewModel_SelectedNotebookChanged;
 
             var fontFamilies = Fonts.SystemFontFamilies.OrderBy(f => f.Source);
@@ -72,40 +72,6 @@ namespace NotesApp.MVVM.View
                     animPlayed++;
                 }  
             }
-        }
-
-        //Executes when a note is selected
-        private async void viewModel_SelectedNoteChanged(object? sender, EventArgs e)
-        {
-            contentRichTextBox.Document.Blocks.Clear();
-
-            //If no note is selected do not allow user to type any sort of text
-            if (viewModel.SelectedNote is null)
-            {
-                noteTitleTextBox.IsEnabled = false;
-                contentRichTextBox.IsEnabled = false;
-                return;
-            }
-
-            noteTitleTextBox.IsEnabled = true;
-            contentRichTextBox.IsEnabled = true;
-
-            if (!string.IsNullOrEmpty(viewModel.SelectedNote.FileLocation))
-            {
-                //Get note from cloud storage | WARNINING: The call to Firebase storage causes delay
-                string downloadPath = await new FirebaseStorage(DatabaseHelper.bucket).Child(viewModel.SelectedNote.Id + ".rtf").GetDownloadUrlAsync();
-
-                //Update the local storage note with its corresponding cloud storage note
-                using (HttpResponseMessage response = await DatabaseHelper.httpClient.GetAsync(downloadPath))
-                {
-                    using (Stream fileStream = await response.Content.ReadAsStreamAsync())
-                    {
-                        var contents = new TextRange(contentRichTextBox.Document.ContentStart, contentRichTextBox.Document.ContentEnd);
-                        contents.Load(fileStream, DataFormats.Rtf);
-                    }
-                }
-            }
-
         }
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
@@ -208,20 +174,5 @@ namespace NotesApp.MVVM.View
             }
         }
 
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
-        {
-            string fileName = $"{viewModel.SelectedNote.Id}.rtf";
-            string rtf_File = Path.Combine(Environment.CurrentDirectory, fileName);
-
-            using (FileStream fileStream = new FileStream(rtf_File, FileMode.Create))
-            {
-                var contents = new TextRange(contentRichTextBox.Document.ContentStart, contentRichTextBox.Document.ContentEnd);
-
-                contents.Save(fileStream, DataFormats.Rtf);
-            }
-
-            viewModel.SelectedNote.FileLocation = await DatabaseHelper.UpdateFile(rtf_File, fileName);
-            await DatabaseHelper.Update(viewModel.SelectedNote);
-        }
     }
 }

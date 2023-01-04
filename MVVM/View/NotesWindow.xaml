@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:local="clr-namespace:NotesApp.MVVM.View"
+        xmlns:local="clr-namespace:NotesApp.MVVM.ViewModel.Helpers"
         xmlns:uc="clr-namespace:NotesApp.MVVM.View.UserControls"
         xmlns:vm="clr-namespace:NotesApp.MVVM.ViewModel"
         mc:Ignorable="d"
@@ -108,7 +108,7 @@
                 <ComboBox x:Name="fontFamilyComboBox" Width="100" SelectionChanged="fontFamilyComboBox_SelectionChanged"/>
                 <ComboBox x:Name="fontSizeComboBox" Width="50" IsEditable="True" TextBoxBase.TextChanged="fontSizeComboBox_TextChanged"/>
 
-                <Button Content="Save" Click="SaveButton_Click"/>
+                <Button Content="Save" Command="{Binding SaveCommand}"/>
 
             </ToolBar>
         </ToolBarTray>
@@ -118,11 +118,12 @@
                 <TextBox x:Name="noteTitleTextBox" Margin="5,0,5,5" 
                          Text="{Binding Path=SelectedNote.Title, Mode=TwoWay, 
                                 UpdateSourceTrigger=PropertyChanged}"
-                         IsEnabled="False"/>
+                         IsEnabled="{Binding TextEditAllowed}"/>
                 <RichTextBox x:Name="contentRichTextBox"
-                         TextChanged="contentRichTextBox_TextChanged"
-                         SelectionChanged="contentRichTextBox_SelectionChanged"
-                         BorderThickness="0" IsEnabled="False"/>
+                             TextChanged="contentRichTextBox_TextChanged"
+                             SelectionChanged="contentRichTextBox_SelectionChanged"
+                             BorderThickness="0" IsEnabled="{Binding TextEditAllowed}" 
+                             local:RichTextBoxHelper.DocumentXaml="{Binding NoteDocument}"/>
             </StackPanel>
         </Grid>
     </DockPanel>
