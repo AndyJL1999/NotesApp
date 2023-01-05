@@ -94,7 +94,7 @@
         <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
 
-                <Button x:Name="speechButton" Content="Speech" Click="speechButton_Click"/>
+                <Button x:Name="speechButton" Content="Speech" Command="{Binding SpeechCommand}"/>
                 <ToggleButton x:Name="boldButton" Click="boldButton_Click">
                     <TextBlock Text="B" FontWeight="Bold"/>
                 </ToggleButton>
@@ -105,8 +105,10 @@
                     <TextBlock Text="U" TextDecorations="Underline"/>
                 </ToggleButton>
 
-                <ComboBox x:Name="fontFamilyComboBox" Width="100" SelectionChanged="fontFamilyComboBox_SelectionChanged"/>
-                <ComboBox x:Name="fontSizeComboBox" Width="50" IsEditable="True" TextBoxBase.TextChanged="fontSizeComboBox_TextChanged"/>
+                <ComboBox x:Name="fontFamilyComboBox" Width="100" Focusable="False" 
+                          SelectionChanged="fontFamilyComboBox_SelectionChanged"/>
+                <ComboBox x:Name="fontSizeComboBox" Width="50" IsEditable="True" Focusable="False" 
+                          TextBoxBase.TextChanged="fontSizeComboBox_TextChanged"/>
 
                 <Button Content="Save" Command="{Binding SaveCommand}"/>
 

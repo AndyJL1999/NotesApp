@@ -1,4 +1,6 @@
 ﻿using Firebase.Storage;
+using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.CognitiveServices.Speech;
 using NotesApp.MVVM.Model;
 using NotesApp.MVVM.ViewModel.Commands;
 using NotesApp.MVVM.ViewModel.Helpers;
@@ -31,6 +33,7 @@ namespace NotesApp.MVVM.ViewModel
         private ICommand _newNoteCommand;
         private ICommand _deleteCommand;
         private ICommand _saveCommand;
+        private ICommand _speechCommand;
         #endregion
 
         #region ----------Events----------
@@ -177,6 +180,18 @@ namespace NotesApp.MVVM.ViewModel
                 return _saveCommand;
             }
         }
+        public ICommand SpeechCommand 
+        { 
+            get
+            {
+                if(_speechCommand is null)
+                {
+                    _speechCommand = new RelayCommand(p => Speech(), p => true);
+                }
+
+                return _speechCommand;
+            }
+        }
         public ObservableCollection<Notebook> Notebooks { get; set; }
         public ObservableCollection<Note> Notes { get; set; }
         #endregion
@@ -226,7 +241,6 @@ namespace NotesApp.MVVM.ViewModel
         public async void GetNotebooks()
 		{
 			string appUserId = App.UserId;
-
 
 			var notebooks = (await DatabaseHelper.Read<Notebook>())?
 				.Where(n => n.UserId == App.UserId).ToList();
@@ -332,6 +346,30 @@ namespace NotesApp.MVVM.ViewModel
                         contents.Load(fileStream, DataFormats.Rtf);
                     }
                 }
+            }
+        }
+
+        private async void Speech()
+        {
+            //NO SUBSCRIPTION YET! WILL NOT WORK!
+            string region = "eastus";
+            string key = "";
+
+            try
+            {
+                var speechConfig = SpeechConfig.FromSubscription(key, region);
+                using (var audioConfig = AudioConfig.FromDefaultMicrophoneInput())
+                {
+                    using (var recongnizer = new SpeechRecognizer(speechConfig, audioConfig))
+                    {
+                        var result = await recongnizer.RecognizeOnceAsync();
+                        NoteDocument.Blocks.Add(new Paragraph(new Run(result.Text)));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Subscription Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion

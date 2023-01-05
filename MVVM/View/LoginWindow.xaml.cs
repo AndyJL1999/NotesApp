@@ -35,8 +35,10 @@ namespace NotesApp.MVVM.View
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
-            if(hasNotLoggedIn)
+            if (hasNotLoggedIn)
+            {
                 Environment.Exit(0);
+            }
         }
 
         private void ViewModel_Authenticated(object? sender, EventArgs e)

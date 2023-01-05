@@ -27,8 +27,8 @@ namespace NotesApp.MVVM.View
     /// </summary>
     public partial class NotesWindow : Window
     {
-        int animPlayed = 0;
         NotesVM viewModel;
+        int animPlayed = 0;
 
         public NotesWindow()
         {
@@ -91,10 +91,14 @@ namespace NotesApp.MVVM.View
         {
             bool isChecked = (sender as ToggleButton).IsChecked ?? false;
 
-            if(isChecked)
+            if (isChecked)
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontWeightProperty, FontWeights.Bold);
+            }
             else
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontWeightProperty, FontWeights.Normal);
+            }
         }
 
         //Italicize or remove italicized selected text when clicked
@@ -103,9 +107,13 @@ namespace NotesApp.MVVM.View
             bool isButtonEnabled = (sender as ToggleButton).IsChecked ?? false;
 
             if (isButtonEnabled)
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontStyleProperty, FontStyles.Italic);
+            }
             else
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontStyleProperty, FontStyles.Normal);
+            }
         }
 
         //Underline or remove underline selected text when clicked
@@ -114,7 +122,9 @@ namespace NotesApp.MVVM.View
             bool isButtonEnabled = (sender as ToggleButton).IsChecked ?? false;
 
             if (isButtonEnabled)
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, TextDecorations.Underline);
+            }
             else
             {
                 TextDecorationCollection textDecorations;
@@ -135,42 +145,26 @@ namespace NotesApp.MVVM.View
             underlineButton.IsChecked = (selectedWeight != DependencyProperty.UnsetValue) && selectedDecoration.Equals(TextDecorations.Underline);
 
             fontFamilyComboBox.SelectedItem = contentRichTextBox.Selection.GetPropertyValue(FontFamilyProperty);
-            fontSizeComboBox.Text = (contentRichTextBox.Selection.GetPropertyValue(FontSizeProperty)).ToString();
+
+            if (Int32.TryParse((contentRichTextBox.Selection.GetPropertyValue(FontSizeProperty)).ToString(), out _))
+            {
+                fontSizeComboBox.Text = (contentRichTextBox.Selection.GetPropertyValue(FontSizeProperty)).ToString();
+            }
         }
 
         private void fontFamilyComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(fontFamilyComboBox.SelectedItem != null)
+            if (fontFamilyComboBox.SelectedItem != null)
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontFamilyProperty, fontFamilyComboBox.SelectedItem);
+            }
         }
 
         private void fontSizeComboBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (fontSizeComboBox.Text != string.Empty)
+            {
                 contentRichTextBox.Selection.ApplyPropertyValue(Inline.FontSizeProperty, fontSizeComboBox.Text);
-        }
-
-        private async void speechButton_Click(object sender, RoutedEventArgs e)
-        {
-            //NO SUBSCRIPTION YET! WILL NOT WORK!
-            string region = "eastus";
-            string key = "";
-
-            try
-            {
-                var speechConfig = SpeechConfig.FromSubscription(key, region);
-                using (var audioConfig = AudioConfig.FromDefaultMicrophoneInput())
-                {
-                    using (var recongnizer = new SpeechRecognizer(speechConfig, audioConfig))
-                    {
-                        var result = await recongnizer.RecognizeOnceAsync();
-                        contentRichTextBox.Document.Blocks.Add(new Paragraph(new Run(result.Text)));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Subscription Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

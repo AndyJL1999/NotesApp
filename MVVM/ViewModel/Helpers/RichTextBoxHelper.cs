@@ -37,18 +37,21 @@ namespace NotesApp.MVVM.ViewModel.Helpers
             typeof(RichTextBoxHelper),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, SetDocument));
 
+
         private static void SetDocument(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
             RichTextBox rtb = (RichTextBox)obj;
-            FlowDocument document = e.NewValue as FlowDocument;
+            FlowDocument document = (FlowDocument)e.NewValue;
+
             if (document == null)
             {
-                rtb.Document = new FlowDocument(); //Document is not amused by null :)
+                rtb.Document = new FlowDocument();
             }
             else
             {
                 rtb.Document = document;
             }
         }
+
     }
 }
